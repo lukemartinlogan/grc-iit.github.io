@@ -4,7 +4,8 @@ authors:
   - X.-H. Sun
   - J. Cernuda
 date: June, 2025
-links: {}
+links:
+  poster: http://cs.iit.edu/~scs/assets/files/hua2025operators.pdf
 month: 6
 slug: xu-2025-rich-operators-a3f2
 tags:
@@ -13,6 +14,6 @@ tags:
   - storage
 title: Rich Operators for Advanced In Situ Processing
 type: Poster
-venue: SSDBM 2025
+venue: The 37th International Conference on Scalable Scientific Data Management (SSDBM 2025)
 year: 2025
 

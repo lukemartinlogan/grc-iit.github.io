@@ -7,7 +7,10 @@ authors:
   - Y. Han
   - X.-H. Sun
 date: May, 2025
-links: {}
+links:
+  bibtex: http://cs.iit.edu/~scs/assets/files/yan2025prominer.bib
+  citation: http://cs.iit.edu/~scs/assets/files/yan2025prominer.txt
+  pdf: http://cs.iit.edu/~scs/assets/files/yan2025prominer.pdf
 month: 5
 slug: yan-2025-prominer-7dc6
 tags:

@@ -10,7 +10,7 @@ authors:
   - A. Kougkas
   - X.-H. Sun
   - N. R. Tallent
-venue: PDSW 2025
+venue: The 10th International Parallel Data Systems Workshop (PDSW'25)
 type: Workshop
 date: November, 2025
 month: 11
@@ -21,7 +21,10 @@ tags:
   - AWS S3
   - Roofline Model
   - Performance Analysis
-links: {} # Add actual link when available
+links:
+  bibtex: http://cs.iit.edu/~scs/assets/files/tang2025roofline.bib
+  citation: http://cs.iit.edu/~scs/assets/files/tang2025roofline.txt
+  pdf: http://cs.iit.edu/~scs/assets/files/tang2025roofline.pdf
 abstract: >-
   High-performance computing facilities increasingly form hybrid environments that integrate cloud services.
   To avoid cumbersome network transfers when sharing data, a new class of storage gateways map a subset of facility storage to a cloud counterpart and automatically manage data mirroring.
