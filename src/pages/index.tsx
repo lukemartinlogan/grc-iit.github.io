@@ -1,3 +1,4 @@
+import Heading from "@theme/Heading";
 import HomepageFeatures from "@site/src/components/home/HomepageFeatures";
 import HomepageProjects from "@site/src/components/home/HomepageProjects";
 import Layout from "@theme/Layout";
@@ -14,12 +15,10 @@ function HomepageHeader() {
     <header className={clsx("hero hero--primary", styles.heroBanner)}>
       <div className={styles.heroBannerOverlay} />
       <div className={clsx("container", styles.heroBannerContainer)}>
-        <h1 className={clsx("hero__title", styles.heroBannerText)}>
+        <Heading as="h1" className={clsx("hero__title", styles.heroBannerText)}>
           {`${siteConfig.title} (GRC)`}
-        </h1>
-        <p className={clsx("hero__subtitle", styles.heroBannerText)}>
-          {siteConfig.tagline}
-        </p>
+        </Heading>
+        <p className={clsx("hero__subtitle", styles.heroBannerText)}>{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg margin-right--md"
@@ -27,16 +26,10 @@ function HomepageHeader() {
           >
             Projects
           </Link>
-          <Link
-            className="button button--secondary button--lg margin-right--md"
-            to="/news"
-          >
+          <Link className="button button--secondary button--lg margin-right--md" to="/news">
             News
           </Link>
-          <Link
-            className="button button--secondary button--lg"
-            to="/publications"
-          >
+          <Link className="button button--secondary button--lg" to="/publications">
             Publications
           </Link>
         </div>

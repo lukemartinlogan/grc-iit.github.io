@@ -1,17 +1,9 @@
+import Link from "@docusaurus/Link";
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { MemberLinkType } from "@site/src/types";
-import {
-  faEnvelope,
-  faGlobe,
-  faGraduationCap,
-} from "@fortawesome/free-solid-svg-icons";
-import {
-  faGithub,
-  faLinkedin,
-  faOrcid,
-  faTwitter,
-} from "@fortawesome/free-brands-svg-icons";
+import { faEnvelope, faGlobe, faGraduationCap } from "@fortawesome/free-solid-svg-icons";
+import { faGithub, faLinkedin, faOrcid, faTwitter } from "@fortawesome/free-brands-svg-icons";
 import { useCallback } from "react";
 
 export default function useMemberLinksRenderer() {
@@ -19,9 +11,7 @@ export default function useMemberLinksRenderer() {
     return Object.entries(links).map((link) => {
       const linkType = link[0] as MemberLinkType;
       const href =
-        linkType === "email"
-          ? `mailto:${link[1]}?subject=%5BGRC%20Website%5D%20`
-          : link[1];
+        linkType === "email" ? `mailto:${link[1]}?subject=%5BGRC%20Website%5D%20` : link[1];
       let icon = null;
       switch (linkType) {
         case "email":
@@ -49,14 +39,14 @@ export default function useMemberLinksRenderer() {
           icon = null;
       }
       return (
-        <a
+        <Link
           key={href}
           className="padding-horiz--sm"
           href={href}
           target={linkType === "email" ? "_self" : "_blank"}
         >
           {icon ? <FontAwesomeIcon icon={icon} /> : link[0]}
-        </a>
+        </Link>
       );
     });
   }, []);

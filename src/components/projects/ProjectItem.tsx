@@ -1,3 +1,4 @@
+import Heading from "@theme/Heading";
 import Link from "@docusaurus/Link";
 import React from "react";
 import clsx from "clsx";
@@ -20,18 +21,10 @@ export default function ProjectItem({
 }: ProjectItemProps) {
   const { id, link, name, title, shortDescription } = project;
   return (
-    <div
-      className={clsx("col margin-bottom--lg", isCompact ? "col--3" : "col--4")}
-    >
-      <div
-        className={clsx(
-          "card text--center",
-          styles.card,
-          !isThemeLight && styles.cardDarker
-        )}
-      >
+    <div className={clsx("col margin-bottom--lg", isCompact ? "col--3" : "col--4")}>
+      <div className={clsx("card text--center", styles.card, !isThemeLight && styles.cardDarker)}>
         <div className="card__header">
-          <h3>{title}</h3>
+          <Heading as="h3">{title}</Heading>
           <ProjectBadges addMargin={false} projectId={id} />
         </div>
         <div className="card__body">

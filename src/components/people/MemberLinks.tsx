@@ -1,26 +1,11 @@
+import Link from "@docusaurus/Link";
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faEnvelope,
-  faGlobe,
-  faGraduationCap,
-} from "@fortawesome/free-solid-svg-icons";
-import {
-  faGithub,
-  faLinkedin,
-  faOrcid,
-  faTwitter,
-} from "@fortawesome/free-brands-svg-icons";
+import { faEnvelope, faGlobe, faGraduationCap } from "@fortawesome/free-solid-svg-icons";
+import { faGithub, faLinkedin, faOrcid, faTwitter } from "@fortawesome/free-brands-svg-icons";
 import styles from "./MemberLinks.module.css";
 
-type LinkType =
-  | "email"
-  | "github"
-  | "linkedin"
-  | "orcid"
-  | "twitter"
-  | "website"
-  | "scholar";
+type LinkType = "email" | "github" | "linkedin" | "orcid" | "twitter" | "website" | "scholar";
 
 interface LinkProps {
   type: LinkType;
@@ -96,14 +81,13 @@ const formatLinkText = (type: LinkType, url: string): string => {
 // Individual link component
 const LinkItem: React.FC<LinkProps> = ({ type, url }) => {
   // Add mailto: prefix if it's an email without it
-  const href =
-    type === "email" && !url.startsWith("mailto:") ? `mailto:${url}` : url;
+  const href = type === "email" && !url.startsWith("mailto:") ? `mailto:${url}` : url;
 
   // Get tooltip text
   const tooltipText = formatLinkText(type, url);
 
   return (
-    <a
+    <Link
       href={href}
       target={type === "email" ? "_self" : "_blank"}
       rel="noopener noreferrer"
@@ -112,7 +96,7 @@ const LinkItem: React.FC<LinkProps> = ({ type, url }) => {
       aria-label={`${type}: ${tooltipText}`}
     >
       <span className={styles.icon}>{getIcon(type)}</span>
-    </a>
+    </Link>
   );
 };
 

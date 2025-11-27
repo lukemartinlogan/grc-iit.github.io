@@ -1,3 +1,4 @@
+import Heading from "@theme/Heading";
 import React from "react";
 import clsx from "clsx";
 
@@ -50,14 +51,14 @@ function Feature({ title, Svg, description }: FeatureItem) {
         <Svg className={styles.featureSvg} role="img" />
       </div>
       <div className="text--center padding-horiz--md padding-top--md">
-        <h3>{title}</h3>
+        <Heading as="h3">{title}</Heading>
         <p>{description}</p>
       </div>
     </div>
   );
 }
 
-export default function HomepageFeatures(): JSX.Element {
+function HomepageFeatures(): JSX.Element {
   return (
     <section className={styles.features}>
       <SectionHeader>Our research covers various aspects of high-end computing:</SectionHeader>
@@ -71,3 +72,5 @@ export default function HomepageFeatures(): JSX.Element {
     </section>
   );
 }
+
+export default HomepageFeatures;
