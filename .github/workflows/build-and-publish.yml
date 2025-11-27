@@ -33,8 +33,8 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
+          cname: grc.iit.edu
           deploy_key: ${{ secrets.DEPLOY_KEY }}
           external_repository: grc-iit/grc-iit.github.io
-          name: grc.iit.edu
           publish_branch: gh-pages
           publish_dir: ./build
