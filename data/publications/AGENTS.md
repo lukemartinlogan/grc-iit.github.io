@@ -10,21 +10,21 @@ What to edit
 
 Required fields
 
-- `title` (string)
+- `title` (string; double-quoted)
 - `authors` (array of short-name strings, e.g., `A. Kougkas`)
-- `venue` (string)
+- `venue` (string; double-quoted)
 - `type` (one of: `Conference`, `Journal`, `Book`, `Book Chapter`, `Poster`, `Technical Report`, `Thesis`, `WIP`, `Workshop`)
 - `date` (string, human-readable; e.g., `June, 2025`) – used for sorting
+- `month` (number)
+- `year` (number)
 - `tags` (array of strings)
 - `links` (map of string→url; keys like `pdf`, `bibtex`, `code` are common)
-- `slug` (string, unique; becomes the URL segment)
+- `slug` (string, unique; becomes the URL segment; suffixed by 4 unique characters (e.g., `-x1yq`) to prevent URL collision)
 
 Optional fields
 
 - `abstract` (string)
 - `doi` (string)
-- `month` (number)
-- `year` (number)
 
 Routing and rendering
 
