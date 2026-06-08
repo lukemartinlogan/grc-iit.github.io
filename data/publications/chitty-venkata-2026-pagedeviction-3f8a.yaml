@@ -25,7 +25,10 @@ authors:
 date: March, 2026
 month: 3
 year: 2026
-links: {}
+links: 
+  bibtex: http://cs.iit.edu/~scs/assets/files/chitty-venkata-2026-pagedeviction.bib
+  citation: http://cs.iit.edu/~scs/assets/files/chitty-venkata-2026-pagedeviction.txt
+  pdf: http://cs.iit.edu/~scs/assets/files/chitty-venkata-2026-pagedeviction.pdf
 slug: chitty-venkata-2026-pagedeviction-3f8a
 tags:
   - KV Cache
