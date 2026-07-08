@@ -216,4 +216,225 @@ void TestListModify() {
   // list is now 10, 1, 2, 3, 4
   list.erase(list.begin());
 }
-``` 
+```
+
+## std::map
+
+[std::map](https://cplusplus.com/reference/map/map/) is an *ordered* associative
+container that maps unique keys to values. It is typically implemented as a
+balanced binary search tree (a red-black tree), so its keys are always kept in
+sorted order and lookups are O(log N).
+
+### Construct
+
+```cpp
+#include <map>
+#include <string>
+void TestMapConstruct() {
+  // An empty map from std::string to int
+  std::map<std::string, int> map1;
+  // A map initialized with key-value pairs
+  std::map<std::string, int> map2{{"a", 1}, {"b", 2}, {"c", 3}};
+}
+```
+
+### Insert and Access
+
+```cpp
+#include <map>
+#include <string>
+void TestMapModify() {
+  std::map<std::string, int> ages;
+  // Insert (or overwrite) via operator[]; creates the key if absent
+  ages["alice"] = 30;
+  // insert() does nothing if the key already exists
+  ages.insert({"bob", 25});
+  // emplace() constructs the pair in place
+  ages.emplace("carol", 40);
+
+  // WARNING: operator[] inserts a default-valued entry if the key is missing
+  int a = ages["alice"];
+  // Safe lookup: find() returns end() when the key is not present
+  std::map<std::string, int>::iterator it = ages.find("dave");
+  if (it != ages.end()) {
+    int d = it->second;
+  }
+  // Check membership without inserting (C++20: ages.contains("bob"))
+  bool has_bob = ages.count("bob") > 0;
+}
+```
+
+### Erase and Iterate
+
+```cpp
+#include <map>
+#include <string>
+void TestMapErase() {
+  std::map<std::string, int> ages{{"alice", 30}, {"bob", 25}};
+  // Erase by key
+  ages.erase("bob");
+  // Iterating a map visits keys in sorted order.
+  // Note the key type is const: std::pair<const std::string, int>
+  for (const std::pair<const std::string, int> &kv : ages) {
+    // kv.first is the key, kv.second is the value
+  }
+}
+```
+
+## std::set
+
+[std::set](https://cplusplus.com/reference/set/set/) stores a sorted collection of
+unique keys. It is essentially an `std::map` without the associated values, and
+shares the same balanced-BST implementation and O(log N) operations.
+
+```cpp
+#include <set>
+void TestSet() {
+  // Duplicates are ignored; this stores {1, 2, 3}
+  std::set<int> nums{3, 1, 2, 2};
+  // insert() returns a pair; its bool is false if the key was already present
+  nums.insert(4);
+  // Membership test (C++20: nums.contains(2))
+  bool has_two = nums.count(2) > 0;
+  // Erase by value
+  nums.erase(1);
+  // Iterating visits elements in sorted order: 2, 3, 4
+  for (int n : nums) {
+    // Do something with n
+  }
+}
+```
+
+## std::unordered_map
+
+[std::unordered_map](https://cplusplus.com/reference/unordered_map/unordered_map/)
+maps unique keys to values using a **hash table**. Lookup, insert, and erase are
+O(1) on average (O(N) in the pathological worst case). Unlike `std::map`, the keys
+are **not** stored in any particular order. This is usually the default choice for
+key-value storage when you don't need sorted keys.
+
+```cpp
+#include <string>
+#include <unordered_map>
+void TestUnorderedMap() {
+  std::unordered_map<std::string, int> ages{{"alice", 30}, {"bob", 25}};
+  // Insert or update
+  ages["carol"] = 40;
+  ages.insert({"dave", 22});
+  // Lookup
+  std::unordered_map<std::string, int>::iterator it = ages.find("alice");
+  if (it != ages.end()) {
+    int a = it->second;
+  }
+  // Membership (C++20: ages.contains("bob"))
+  bool has_bob = ages.count("bob") > 0;
+  // Erase
+  ages.erase("bob");
+  // Iteration order is unspecified
+  for (const std::pair<const std::string, int> &kv : ages) {
+    // kv.first, kv.second
+  }
+}
+```
+
+## std::unordered_set
+
+[std::unordered_set](https://cplusplus.com/reference/unordered_set/unordered_set/)
+is the hash-table counterpart of `std::set`: a collection of unique keys with
+average O(1) operations and no ordering guarantees.
+
+```cpp
+#include <string>
+#include <unordered_set>
+void TestUnorderedSet() {
+  std::unordered_set<std::string> names{"alice", "bob"};
+  // Insert
+  names.insert("carol");
+  // Membership (C++20: names.contains("alice"))
+  bool has_alice = names.count("alice") > 0;
+  // Erase
+  names.erase("bob");
+  // Iteration order is unspecified
+  for (const std::string &name : names) {
+    // Do something with name
+  }
+}
+```
+
+## std::queue
+
+[std::queue](https://cplusplus.com/reference/queue/queue/) is a **container
+adapter** providing first-in-first-out (FIFO) access. By default it wraps an
+`std::deque`. You can only touch the front and back — there is no iteration or
+random access.
+
+```cpp
+#include <queue>
+void TestQueue() {
+  std::queue<int> q;
+  // Add to the back
+  q.push(1);
+  q.push(2);
+  q.push(3);
+  // Inspect the ends
+  int f = q.front();  // 1 (oldest element)
+  int b = q.back();   // 3 (newest element)
+  // Remove from the front (pop() returns void)
+  q.pop();  // removes 1; front() is now 2
+  // Size / empty
+  bool is_empty = q.empty();
+  auto n = q.size();
+}
+```
+
+## std::priority_queue
+
+[std::priority_queue](https://cplusplus.com/reference/queue/priority_queue/) is a
+container adapter that always keeps the highest-priority element accessible at the
+top. It is implemented as a binary heap over an `std::vector`, giving O(log N)
+push/pop and O(1) access to the top. By default it is a **max-heap** (largest on
+top).
+
+```cpp
+#include <functional>  // std::greater
+#include <queue>
+#include <vector>
+void TestPriorityQueue() {
+  // Default: a max-heap. The largest element is always on top.
+  std::priority_queue<int> max_heap;
+  max_heap.push(3);
+  max_heap.push(1);
+  max_heap.push(2);
+  int top = max_heap.top();  // 3 (largest)
+  max_heap.pop();            // removes 3; top() is now 2
+
+  // Supply std::greater to build a min-heap (smallest on top).
+  std::priority_queue<int, std::vector<int>, std::greater<int>> min_heap;
+  min_heap.push(3);
+  min_heap.push(1);
+  min_heap.push(2);
+  int smallest = min_heap.top();  // 1
+}
+```
+
+## Choosing a container
+
+|Container|Ordering|Lookup / Insert / Erase|Underlying structure|
+|---|---|---|---|
+|`std::vector`|Insertion order|access O(1), insert/erase O(N)|Dynamic array|
+|`std::list`|Insertion order|access O(N), insert/erase O(1) at a known position|Doubly-linked list|
+|`std::map` / `std::set`|Sorted by key|O(log N)|Balanced BST (red-black tree)|
+|`std::unordered_map` / `std::unordered_set`|None|O(1) average, O(N) worst|Hash table|
+|`std::queue`|FIFO|push / pop / front / back O(1)|Adapter over `std::deque`|
+|`std::priority_queue`|Highest priority first|push / pop O(log N), top O(1)|Binary heap over `std::vector`|
+
+Guidance:
+
+1. Use `std::map` / `std::set` when you need the keys kept in **sorted** order or
+   need range queries (e.g. "all keys between X and Y").
+2. Use `std::unordered_map` / `std::unordered_set` when you just need fast
+   average-case lookup and order does not matter — this is the usual default for
+   key-value storage.
+3. Use `std::queue` for FIFO processing, such as a work/task queue.
+4. Use `std::priority_queue` when you always need to pull the highest- (or
+   lowest-) priority item next, such as in scheduling or Dijkstra's algorithm. 

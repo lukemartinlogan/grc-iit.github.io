@@ -64,6 +64,44 @@ Trade-offs: the extension ecosystem is much smaller than VS Code's, and native
 Windows support and remote-over-SSH development are less mature. It is an
 excellent local editor and improving quickly.
 
+## Dev Containers
+
+A **Dev Container** (development container) lets your editor run *inside* a Docker
+container, so everyone working on a project gets the exact same compiler, tools,
+and libraries regardless of their host OS. The environment is described by a
+`.devcontainer/devcontainer.json` file (optionally with its own `Dockerfile`)
+checked into the repository. This is the same idea as the
+[containers](../02-containers/01-docker-basics.md) tutorial, but the editor,
+language server, and debugger all attach to the container automatically.
+
+Why this matters for HPC/C++ work:
+
+- **Reproducibility.** No more "works on my machine" — the toolchain is pinned in
+  the repo. Great for teaching and onboarding.
+- **Clean host.** You don't have to install `g++`, `cmake`, MPI, etc. on your
+  laptop; they live in the container.
+- **Consistency with clusters.** You can base the container on the same Linux
+  distro your HPC system uses.
+
+Editor support:
+
+- **VS Code** — the
+  [**Dev Containers**](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+  extension (`ms-vscode-remote.remote-containers`). Open a folder that contains a
+  `.devcontainer/`, then run **"Dev Containers: Reopen in Container"**. It builds
+  the image, installs the listed extensions *inside* the container, and reopens
+  your project there. It also works together with Remote - SSH (a container on a
+  remote host) and with GitHub Codespaces, which uses the same spec.
+- **Cursor** — being a VS Code fork, it supports the same Dev Containers workflow.
+- **Zed** — has its own container/remote development support, though the
+  `devcontainer.json` ecosystem is centered on VS Code.
+
+The `devcontainer.json` can also list which extensions to auto-install in the
+container (for C++, that's typically [clangd](./02-cpp-extensions.md), CMake
+Tools, and a debugger — see the [C++ extensions](./02-cpp-extensions.md) page).
+The [C++ tutorial setup](../10-cpp-introduction/01-cpp-hello-world.mdx) ships a
+ready-to-use Dev Container so you can start writing C++ with zero local setup.
+
 ## Quick comparison
 
 | Editor  | Base           | Best for                                  | Remote SSH | Extensions |

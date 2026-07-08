@@ -57,6 +57,15 @@ mpic++ mpi_example.cpp -o mpi_example
 mpirun -np 4 ./mpi_example
 ```
 
+:::note
+By default OpenMPI refuses to launch more processes than you have CPU cores. If
+you run `-np 4` on a machine (or container) with fewer than 4 cores you'll see a
+"not enough slots available" error. Add `--oversubscribe` to run anyway:
+```bash
+mpirun --oversubscribe -np 4 ./mpi_example
+```
+:::
+
 The output of this should be
 ```bash
 Process 0 of 4

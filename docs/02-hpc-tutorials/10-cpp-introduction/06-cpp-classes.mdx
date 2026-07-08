@@ -3,12 +3,19 @@ In this section, we will discuss the basics of object-oriented programming (OOP)
 in C++. A class represents a set of functions (i.e., methods) and data for those
 methods. An object is an instance of a class.
 
-* Class variables
-* Methods
-* Encapsulation:
-* Polymorphism
-* Inheritance
-* Operator overloading
+Object-oriented programming is built on three core ideas, which we define here and
+then demonstrate throughout this section:
+
+- **Encapsulation** — bundling data together with the methods that operate on it
+  inside a class, and controlling what outside code is allowed to access. See
+  [Encapsulation](#encapsulation).
+- **Inheritance** — deriving a new class from an existing one so that it reuses
+  and extends the base class's data and behavior. See [Inheritance](#inheritance).
+- **Polymorphism** — letting a single interface operate on many different concrete
+  types, with the correct behavior selected at run time. See
+  [Polymorphism](#polymorphism).
+
+We will also cover [operator overloading](#operator-overloading).
 
 ## Defining a Class
 In C++, a class is a user-defined data type that combines data members (variables) and member functions (methods) into a single unit. Classes serve as blueprints for creating objects. Here's a simple example of defining a class in C++:
@@ -32,6 +39,98 @@ class Rectangle {
   }
 };
 ```
+
+## Encapsulation
+
+**Encapsulation** means grouping data together with the methods that act on it,
+and then restricting access so outside code can only use the class the way you
+intend. In C++, access is controlled with three **access specifiers**:
+
+- **`public`** — members are accessible from anywhere. This is the class's
+  interface.
+- **`private`** — members are accessible only from within the class's own methods.
+  This is the default for a `class`. Use it to hide implementation details and to
+  protect the class's invariants.
+- **`protected`** — like `private`, but also accessible from **derived** classes
+  (see [Inheritance](#inheritance)).
+
+```cpp
+class BankAccount {
+ public:
+  explicit BankAccount(double balance) : balance_(balance) {}
+
+  // Public interface: the only way outside code can change the balance.
+  void Deposit(double amount) {
+    if (amount > 0) {
+      balance_ += amount;
+    }
+  }
+
+  double balance() const { return balance_; }
+
+ private:
+  // Hidden: outside code cannot set balance_ to a nonsensical value directly.
+  double balance_;
+};
+
+int main() {
+  BankAccount account(100.0);
+  account.Deposit(50.0);          // OK: uses the public interface
+  double b = account.balance();   // OK: public getter
+  // account.balance_ = -999;     // ERROR: balance_ is private
+  return 0;
+}
+```
+
+Because `balance_` is private, the only way to change it is through `Deposit`,
+which can enforce rules (here, rejecting non-positive amounts). This is the main
+practical benefit of encapsulation: the class controls its own invariants.
+
+### `struct` vs `class`
+
+A `struct` and a `class` in C++ are almost identical — the only difference is the
+default access level. Members of a `struct` are `public` by default, while members
+of a `class` are `private` by default. By convention, use a `struct` for simple
+passive data (see [structs](./04-cpp-basic-syntax.mdx#structs)) and a `class` when
+you want encapsulation.
+
+### `friend`
+
+Sometimes another function or class legitimately needs access to your private
+members. A **`friend`** declaration grants that access explicitly. A common use is
+a stream-output operator that needs to read private data:
+
+```cpp
+#include <iostream>
+
+class Point {
+ public:
+  Point(int x, int y) : x_(x), y_(y) {}
+
+  // Grant this operator access to Point's private members.
+  friend std::ostream& operator<<(std::ostream& os, const Point& p);
+
+ private:
+  int x_;
+  int y_;
+};
+
+// Not a member of Point, but allowed to read x_ and y_ because it is a friend.
+std::ostream& operator<<(std::ostream& os, const Point& p) {
+  os << "(" << p.x_ << ", " << p.y_ << ")";
+  return os;
+}
+
+int main() {
+  Point p(3, 4);
+  std::cout << p << std::endl;  // prints (3, 4)
+  return 0;
+}
+```
+
+Use `friend` sparingly — it deliberately pokes a hole in encapsulation, so only
+grant it when a function genuinely needs private access.
+
 ## Constructors
 Constructors are special member functions used to initialize objects of a class. Here's an example of a constructor for the Rectangle class:
 
@@ -64,6 +163,109 @@ int main() {
   return 0;
 }
 ```
+
+## Inheritance
+
+**Inheritance** lets a new class (the *derived* class) reuse and extend an existing
+class (the *base* class). The derived class automatically gets the base class's
+members and can add its own or override existing behavior. This models an
+"is-a" relationship.
+
+```cpp
+#include <iostream>
+#include <string>
+
+class Animal {
+ public:
+  explicit Animal(const std::string& name) : name_(name) {}
+
+  void Eat() const {
+    std::cout << name_ << " is eating" << std::endl;
+  }
+
+ protected:
+  // 'protected' data is visible to derived classes but not to outside code.
+  std::string name_;
+};
+
+// Dog "is-a" Animal: it inherits Eat() and name_.
+class Dog : public Animal {
+ public:
+  explicit Dog(const std::string& name) : Animal(name) {}
+
+  void Bark() const {
+    std::cout << name_ << " says woof" << std::endl;  // name_ is protected
+  }
+};
+
+int main() {
+  Dog d("Rex");
+  d.Eat();   // inherited from Animal
+  d.Bark();  // defined by Dog
+  return 0;
+}
+```
+
+The derived class calls the base class's constructor in its initializer list
+(`Dog(...) : Animal(name)`). Note how `Dog` can read the `protected` member
+`name_`, which ordinary outside code could not.
+
+## Polymorphism
+
+**Polymorphism** ("many forms") lets you use a base-class pointer or reference to
+operate on objects of different derived types, with the correct method chosen at
+run time. You enable this by marking methods `virtual` and overriding them in the
+derived classes.
+
+```cpp
+#include <iostream>
+
+class Shape {
+ public:
+  virtual ~Shape() = default;  // a polymorphic base class needs a virtual dtor
+
+  // A pure virtual method (= 0) makes Shape an abstract interface: you cannot
+  // instantiate Shape directly, only classes that implement Area().
+  virtual double Area() const = 0;
+};
+
+class Circle : public Shape {
+ public:
+  explicit Circle(double radius) : radius_(radius) {}
+  double Area() const override { return 3.14159 * radius_ * radius_; }
+
+ private:
+  double radius_;
+};
+
+class Square : public Shape {
+ public:
+  explicit Square(double side) : side_(side) {}
+  double Area() const override { return side_ * side_; }
+
+ private:
+  double side_;
+};
+
+// Works for ANY Shape; the correct Area() is selected at run time.
+void PrintArea(const Shape& shape) {
+  std::cout << "Area: " << shape.Area() << std::endl;
+}
+
+int main() {
+  Circle c(2.0);
+  Square s(3.0);
+  PrintArea(c);  // calls Circle::Area
+  PrintArea(s);  // calls Square::Area
+  return 0;
+}
+```
+
+The `override` keyword tells the compiler you intend to override a base-class
+virtual method, so it will error if the signature doesn't match. The
+[factory pattern](./11-cpp-factory.mdx) and [mixins](./12-cpp-mixins.mdx) build
+directly on inheritance and polymorphism.
+
 ## Operator Overloading
 Operator overloading allows you to define how operators like +, -, *, and others behave with objects of your class. Here's an example of overloading the + operator for the Rectangle class:
 

@@ -1,0 +1,244 @@
+# C++ Templates
+
+**Templates** let you write code once and reuse it for many different types.
+Instead of writing a separate `Max` function for `int`, `float`, and `double`, or
+a separate stack class for every element type, you write a single *generic*
+version and the compiler generates the concrete code for each type you actually
+use. This happens at **compile time**, so there is no runtime overhead.
+
+You have already been using templates: every standard container from the
+[data structures](./09-cpp-data-structures.mdx) page — `std::vector<int>`,
+`std::map<std::string, int>`, and so on — is a class template.
+
+This page focuses on the simple, everyday cases: templating functions, classes,
+and methods.
+
+## Function Templates
+
+A function template generates a function for whatever type(s) you call it with.
+The `typename T` part declares `T` as a placeholder for a type.
+
+```cpp
+// Returns the larger of two values of the same type T.
+template <typename T>
+T Max(T a, T b) {
+  return (a > b) ? a : b;
+}
+
+int main() {
+  // The compiler deduces T from the arguments (this is "template argument
+  // deduction"), so you usually don't have to spell it out.
+  int i = Max(3, 7);           // T = int,    i = 7
+  double d = Max(2.5, 1.5);    // T = double, d = 2.5
+
+  // You can also specify the type explicitly when you need to.
+  int j = Max<int>(3, 7);
+  return 0;
+}
+```
+
+Each distinct type you call `Max` with causes the compiler to *instantiate* a new
+version of the function. `Max(3, 7)` and `Max(2.5, 1.5)` compile to two separate
+functions.
+
+## Class Templates
+
+A class template parameterizes an entire class over one or more types. Here is a
+minimal generic stack that works for any element type:
+
+```cpp
+#include <string>
+#include <vector>
+
+// A minimal generic stack that can hold any type T.
+template <typename T>
+class Stack {
+ public:
+  void Push(const T& value) { data_.push_back(value); }
+
+  T Pop() {
+    T value = data_.back();
+    data_.pop_back();
+    return value;
+  }
+
+  bool Empty() const { return data_.empty(); }
+
+ private:
+  std::vector<T> data_;
+};
+
+int main() {
+  // Unlike function templates, you must name the type in angle brackets
+  // when you create a class-template object.
+  Stack<int> int_stack;
+  int_stack.Push(1);
+  int_stack.Push(2);
+  int top = int_stack.Pop();  // 2
+
+  Stack<std::string> str_stack;
+  str_stack.Push("hello");
+  return 0;
+}
+```
+
+`Stack<int>` and `Stack<std::string>` are two different concrete classes generated
+from the same template.
+
+## Method (Member Function) Templates
+
+A single method can be templated even when its class is not. This is handy when a
+method should accept many types but the class itself doesn't need to be generic:
+
+```cpp
+#include <iostream>
+
+// A normal (non-template) class with a templated method.
+class Printer {
+ public:
+  template <typename T>
+  void Print(const T& value) {
+    std::cout << value << std::endl;
+  }
+};
+
+int main() {
+  Printer p;
+  p.Print(42);       // T = int
+  p.Print("hello");  // T = const char*
+  p.Print(3.14);     // T = double
+  return 0;
+}
+```
+
+Class templates can also have their own additional method templates, but for most
+code a plain templated method like the one above is all you need.
+
+## Multiple Type Parameters
+
+A template can take more than one type parameter. Separate them with commas:
+
+```cpp
+// A simple pair holding two values of possibly different types.
+template <typename First, typename Second>
+struct Pair {
+  First first;
+  Second second;
+};
+
+int main() {
+  Pair<int, double> p{1, 2.5};
+  Pair<std::string, int> ages{"alice", 30};
+  return 0;
+}
+```
+
+This is exactly how `std::pair<First, Second>` works.
+
+## Non-Type Template Parameters
+
+Template parameters don't have to be types — they can also be compile-time
+constant *values*, such as an integer. This is a simple way to fix a size at
+compile time:
+
+```cpp
+#include <cstddef>
+
+// T is a type parameter; N is a compile-time constant (a non-type parameter).
+template <typename T, std::size_t N>
+class FixedArray {
+ public:
+  T& operator[](std::size_t i) { return data_[i]; }
+  std::size_t Size() const { return N; }
+
+ private:
+  T data_[N];
+};
+
+int main() {
+  FixedArray<int, 8> arr;  // an array of exactly 8 ints
+  arr[0] = 42;
+  return 0;
+}
+```
+
+Because `N` is known at compile time, `FixedArray<int, 8>` and
+`FixedArray<int, 16>` are distinct types. This is how `std::array<T, N>` is
+declared.
+
+## Variadic Templates
+
+Sometimes you want a template to accept a *variable number* of arguments — for
+example a print function that takes one, two, or ten values. A **variadic
+template** does this with a **parameter pack**: `typename... Args` declares a pack
+of types, and `Args... args` declares the matching pack of values.
+
+The simplest way to work with a pack in C++17 is a **fold expression**, which
+applies an operator across every element of the pack:
+
+```cpp
+#include <iostream>
+
+// Prints any number of arguments, each followed by a space.
+template <typename... Args>
+void Print(const Args&... args) {
+  // Fold expression: expands to (std::cout << arg0 << ' '),
+  // (std::cout << arg1 << ' '), ... one term per argument.
+  ((std::cout << args << ' '), ...);
+  std::cout << std::endl;
+}
+
+int main() {
+  Print(1, 2, 3);            // three ints
+  Print("hello", 42, 3.14);  // mixed types
+  Print();                   // zero arguments is also valid
+  return 0;
+}
+```
+
+Folds work with arithmetic operators too, which makes a type-generic sum trivial:
+
+```cpp
+// Adds any number of values. The "+ ... + 0" fold uses 0 as the starting
+// value, so Sum() with no arguments returns 0.
+template <typename... Args>
+auto Sum(Args... args) {
+  return (args + ... + 0);
+}
+
+int main() {
+  int total = Sum(1, 2, 3, 4);  // 10
+  double d = Sum(1.5, 2.5);     // 4.0
+  return 0;
+}
+```
+
+You can also query how many arguments were passed with `sizeof...(args)`.
+
+Variadic templates are how facilities like `std::make_unique`, `std::make_shared`,
+and type-safe `printf`-style logging accept arbitrary argument lists.
+
+## Where to Put Template Code
+
+There is one important practical rule: **template definitions must be visible
+wherever they are instantiated.** The compiler needs the full body of a template
+to generate code for a specific type, so you cannot split a template into a `.h`
+declaration and a `.cc` definition the way you would for a normal class (see
+[Building C++ Manually](./02-cpp-build-manually.mdx)). In practice, you write
+template code entirely in **header files**.
+
+## Summary
+
+- Use a **function template** to write one function that works for many types.
+- Use a **class template** to write one class (often a container) that works for
+  many types.
+- Use a **method template** when only one method needs to be generic.
+- Template parameters can be types (`typename T`) or compile-time values
+  (`std::size_t N`).
+- Use a **variadic template** (`typename... Args`) with a fold expression when a
+  function or class needs to accept any number of arguments.
+- Keep template definitions in headers.
+
+Templates are the foundation of generic programming in C++ and, together with the
+[standard containers](./09-cpp-data-structures.mdx), let you write reusable,
+type-safe code without duplication.

@@ -201,4 +201,49 @@ int main() {
   free(data);
   free(data2);
 }
-``` 
+```
+
+### RAII
+
+The problem with `malloc`/`free` (and their C++ cousins `new`/`delete`) is that
+*you* have to remember to release the memory. If an early `return`, an exception,
+or a simple oversight skips the `free`, you leak memory.
+
+Modern C++ solves this with **RAII** (Resource Acquisition Is Initialization). The
+idea is to tie a resource's lifetime to the lifetime of an object: the resource is
+acquired in the object's constructor and released automatically in its destructor.
+Because C++ guarantees that an object's destructor runs when it goes out of scope,
+the resource is *always* cleaned up — no manual `free` required.
+
+```cpp
+#include <cstdlib>  // malloc + free
+
+// A minimal RAII wrapper: it acquires memory in its constructor and
+// releases it in its destructor.
+class IntBuffer {
+ public:
+  IntBuffer() : data_((int*)malloc(64 * sizeof(int))) {}
+
+  ~IntBuffer() { free(data_); }  // released automatically — no manual free()
+
+  int* data() { return data_; }
+
+ private:
+  int* data_;
+};
+
+int main() {
+  IntBuffer buffer;
+  buffer.data()[10] = 15;
+  // When 'buffer' goes out of scope here, its destructor runs and frees
+  // the memory automatically.
+}
+```
+
+You rarely need to write RAII wrappers yourself. The standard library already
+provides RAII types for memory, called **smart pointers** (`std::unique_ptr`,
+`std::shared_ptr`), that allocate on construction and free on destruction. Prefer
+them over raw `malloc`/`new` in almost all cases.
+
+We cover smart pointers and RAII in detail in
+[C++ References and Pointers](./08-cpp-refs-and-ptrs.mdx). 

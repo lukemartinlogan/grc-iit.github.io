@@ -19,12 +19,13 @@ import SetupInstructions from './_setup.mdx';
 
 Go to the tutorial:
 ```bash
-cd grc-tutorial
-export GRC_TUTORIAL=${PWD}
 cd ${GRC_TUTORIAL}/cpp/03-cpp-build-with-cmake
 ```
 
-Next perform:
+This example depends on [Boost](https://www.boost.org/). The tutorial Dev
+Container already provides it, so you can build right away. On your own machine
+you can install it with spack (see
+[Installing HPC Software](../06-installing-hpc-software/01-building-with-spack.md)):
 ```bash
 spack install boost
 spack load boost
@@ -100,9 +101,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -03")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -03")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 endif()
 ```
 

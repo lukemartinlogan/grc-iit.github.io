@@ -10,6 +10,22 @@ their [documentation](https://spack.readthedocs.io/en/latest/) to understand bet
 
 Spack is by no means perfect. It has plenty of bugs and nuances.
 
+## Setup
+
+The easiest way to follow this section is the tutorial **Dev Container**, which
+comes with spack **already installed and on your `PATH`** (see the
+[C++ tutorial setup](../10-cpp-introduction/01-cpp-hello-world.mdx) for how to
+open it). If you are using the Dev Container, you can **skip the installation
+below** and jump straight to [listing packages](#list-packages-provided-by-spack)
+— just confirm spack works:
+
+```bash
+spack --version
+```
+
+If you are on your own machine or an HPC login node, install spack as described
+next.
+
 ## Installing `spack`
 
 The official install guide for `spack` is [here](https://spack-tutorial.readthedocs.io/en/latest/tutorial_basics.html).

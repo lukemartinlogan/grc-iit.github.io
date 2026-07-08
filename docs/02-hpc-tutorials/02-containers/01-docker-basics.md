@@ -12,7 +12,47 @@ to go down. This is frequently done by cloud providers
 ## Installation
 
 The official install guide is [here](https://docs.docker.com/engine/install/).
-You do need root priviliges to install and use docker.
+You need root privileges to *install* docker.
+
+### Running Docker without `sudo` (Linux)
+
+By default the Docker daemon socket is owned by `root`, so every docker command
+requires `sudo`. On Linux you can grant your user permission to talk to the
+daemon directly by adding it to the `docker` group:
+
+```bash
+# Create the docker group if it doesn't already exist
+sudo groupadd docker
+# Add your user to the docker group
+sudo usermod -aG docker ${USER}
+```
+
+Group membership is only picked up when you start a new login session. Rather than
+logging out and back in, you can activate the new group in your **current shell**
+with `newgrp`:
+
+```bash
+# Re-evaluate group membership in the current shell
+newgrp docker
+```
+
+After this, you can run docker without `sudo`:
+
+```bash
+docker run hello-world
+```
+
+:::note
+Adding a user to the `docker` group effectively grants them root-equivalent
+privileges on the host (they can start containers that mount the whole
+filesystem). Only do this on machines where you trust the users. The `newgrp`
+trick applies to the current shell; new terminals will already have the group
+after your next login.
+:::
+
+The commands in the rest of this guide are written with `sudo` so they work even
+if you skip this step. If you've added yourself to the `docker` group, you can
+drop the `sudo`.
 
 ## Docker Basics
 
@@ -29,10 +69,10 @@ cd ${GRC_TUTORIAL}/docker/01-docker-basics
 This directory contains a single file: Dockerfile
 
 ## Create a Dockerfile
-Below is an example [Dockerfile](https://github.com/grc-iit/grc-tutorial/blob/main/docker/01-docker-basics/Dockerfile) which creates a basic Ubuntu 22.04 container.
+Below is an example [Dockerfile](https://github.com/grc-iit/grc-tutorial/blob/main/docker/01-docker-basics/Dockerfile) which creates a basic Ubuntu container.
 ```docker
-# Install Ubuntu 22.04
-FROM ubuntu:22.04
+# Install the latest Ubuntu
+FROM ubuntu:latest
 LABEL maintainer="llogan@hawk.illinoistech.edu"
 LABEL version="0.0"
 LABEL description="An example docker image"
@@ -54,9 +94,11 @@ ENV MY_VAR=hi
 RUN echo ${MY_VAR}
 ```
 
-1. FROM ubuntu:22.04 indicates the OS version that docker should install.
-There are other OSes, such as fedora:latest, ubuntu:latest, rockylinux:9.
-This can be useful for testing portability.
+1. FROM ubuntu:latest indicates the OS version that docker should install.
+There are other OSes, such as ubuntu:22.04, fedora:latest, rockylinux:9.
+Pinning a specific version (e.g. ubuntu:22.04) is useful for reproducibility,
+while `latest` always grabs the newest release. This can be useful for testing
+portability.
 2. LABEL parameters are just metadata
 3. RUN executes a command as if in a terminal. We combine the `apt-get update`
 and `apt-get install` into a single `RUN` and clean the apt cache afterwards to

@@ -33,7 +33,7 @@ ssh-keygen -t rsa -f ${PWD}/id_rsa -N "" -q
 ## OpenSSH-Server Dockerfile
 
 We have a sample [Dockerfile](https://github.com/grc-iit/grc-tutorial/blob/main/docker/02-docker-clusters/Dockerfile) which provides a passwordless openssh
-daemon in ubuntu 22.04. We describe the sections of the Dockerfile below.
+daemon in the latest Ubuntu. We describe the sections of the Dockerfile below.
 
 ### Install OpenSSH
 
@@ -42,8 +42,8 @@ Technically, git and the text editors aren't required, but they
 almost always come in useful in real projects.
 
 ```dockerfile
-# Install Ubuntu 22.04
-FROM ubuntu:22.04
+# Install the latest Ubuntu
+FROM ubuntu:latest
 LABEL maintainer="llogan@hawk.illinoistech.edu"
 LABEL version="0.0"
 LABEL description="An example docker image with passwordless SSH"
@@ -125,8 +125,9 @@ then start it.
 # Replaces #PermitEmptyPasswords no with PermitEmptyPasswords yes
 RUN sed -i 's/#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config
 
-# Create this directory, because sshd doesn't automatically
-RUN mkdir /run/sshd
+# sshd needs this directory. Use -p so the build doesn't fail on images
+# where the openssh-server package already created it.
+RUN mkdir -p /run/sshd
 
 # Start SSHD
 CMD ["/usr/sbin/sshd", "-D"]

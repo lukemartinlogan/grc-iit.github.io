@@ -26,9 +26,7 @@ import SetupInstructions from './_setup.mdx';
 <SetupInstructions />
 
 Go to the tutorial:
-```
-cd grc-tutorial
-export GRC_TUTORIAL=${PWD}
+```bash
 cd ${GRC_TUTORIAL}/cpp/01-cpp-hello-world
 ```
 
@@ -108,30 +106,42 @@ the program succeeded. Any other value indicates a failure and the reason for fa
 
 We will build this code manually using gcc. In general, building things manually
 is a bad idea. Build tools (CMake nowadays for C/C++) automate much of the
-process. However, the knowledge of how the compiler is is helpful.
+process. However, knowing how the compiler works is helpful.
 
-Here we will use gcc to compile the program "`hello_world.cc`".
+Here we use gcc to compile the program "`hello_world.cc`":
 
 ```bash
 g++ hello_world.cc -o hello_world
 ```
 
-This will produce an executable file called "hello_world". To run the code:
+This produces an executable file called `hello_world` in the current directory.
+
+## Running the Executable
+
+To run the program, give the path to the executable. The leading `./` tells the
+shell to look for the program in the current directory:
 
 ```bash
 ./hello_world
 ```
 
-The output will be:
+The expected output is:
 
 ```sh
 Hello world 0
 hello world 1
 ```
 
-To view the return code of the program in Linux:
+The first line is printed by `printf` and the second by `std::cout`.
 
-```sh
+### Checking the Return Code
+
+Every program returns an integer **exit code** when it finishes. Our `main` ends
+with `return 0`, and by convention `0` means success — any non-zero value signals
+some kind of failure. On Linux, the shell stores the exit code of the most recent
+command in `$?`, so you can inspect it with:
+
+```bash
 echo $?
 ```
 
@@ -141,4 +151,4 @@ The output will be:
 0
 ```
 
-which is what we returned using the `return` statement.
+which is exactly the value we returned from `main`.
