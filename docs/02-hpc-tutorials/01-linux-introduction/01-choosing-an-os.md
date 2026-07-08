@@ -24,4 +24,4 @@ enable WSL.
 Macs are a bit tricky. Mac and Linux are NOT the same thing. Generally speaking, we highly recommend developing on a Linux distribution which is similar to what
 is used in HPC. Unfortunately, Macs don't have something like WSL. We recommend using either a container (e.g., Docker/Singularity) or a virtual machine
 (VirtualBox/Qemu) for development. Generally, containers are much faster than VMs by default. We recommend using a container for Ubuntu. We describe Docker
-[here](https://github.com/scs-lab/scs-tutorial/wiki/5.1.-Docker-Basics).
+[here](../02-containers/01-docker-basics.md).
