@@ -1,4 +1,0 @@
-label: "Content Transfer Engine"
-link:
-  type: generated-index
-  description: "The Content Transfer Engine (Hermes) is a middeware library that automatically manages buffering in heterogeneous storage environments."

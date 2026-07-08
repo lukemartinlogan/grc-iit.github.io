@@ -1,0 +1,203 @@
+# Singleton
+A singleton is used to provide a single instance of a class and a way
+to access that object from any method. This case
+comes up pretty frequently in our research.
+
+We often use singletons to store configuration data. For example, storage systems
+and databases such as OrangeFS, Redis, and MongoDB have configuration files. These
+files may be in XML, YAML, JSON, etc. Often it is helpful to store the information
+from these files in a singleton. We typically call this a `ConfigurationManager`.
+
+Singletons are intended to be created once and then destroyed at the end of the
+program. They are similar to global variables -- except they are much
+more readable. The main benefit of the singleton pattern is that you avoid passing
+a reference to the singleton data to every single function, class, and method. It
+helps reduce code duplication and the complexity of function parameter lists.
+
+## Usage Example
+
+First, we'll give a brief example of the singleton pattern.
+
+```cpp
+#include <iostream>
+#include "singleton.h"
+
+#define CONFIG grc::Singleton<ConfigurationManager>::GetInstance()
+
+struct ConfigurationManager {
+  int a;
+  int b;
+};
+
+void func1() {
+  // Print 25
+  std::cout << CONFIG->a << std::endl;
+  // Print 30
+  std::cout << CONFIG->b << std::endl;
+}
+
+int main() {
+  // Config instance will be allocated here
+  // Set the "a" entry to 25
+  CONFIG->a = 25;
+  // Set the "b" entry to 30
+  CONFIG->b = 30;
+  // Call func1
+  func1();
+}
+```
+
+In this example, the `CONFIG` macro can be called from any function.
+There is no need to pass `CONFIG` to the function `func1` directly.
+The main benefit of the singleton is you don't have to pass around the
+same parameters everywhere.
+
+There are two singleton implementations we use, and they make a different
+trade-off between **simplicity** and **robustness across shared objects (DLLs)**:
+
+1. A **simpler regular singleton** -- a header-only template. Easy to use, but a
+   separate instance can be created per shared object that references it.
+2. A **robust C-style singleton** -- backed by a global pointer that is *defined
+   exactly once* in a single translation unit. More boilerplate, but there is only
+   ever one instance, even across shared-object boundaries.
+
+## Simpler regular singleton
+
+This singleton lives entirely in a header. It uses function-local `static` storage
+so you don't have to define any static members out-of-line, and it uses placement
+`new` so the object is constructed exactly once. `WithLock` selects whether
+construction is guarded for multi-threaded use.
+
+```cpp
+namespace grc {
+
+/**
+ * A class to represent the singleton pattern.
+ * Does not require specific initialization of the static variable.
+ *
+ * NOTE(llogan): Python does NOT play well with this singleton.
+ * I find that it will duplicate the singleton when loading wrapper
+ * functions. It is very strange, but this one should be avoided for
+ * codes that plan to be called by python.
+ * */
+template <typename T, bool WithLock>
+class Singleton {
+ public:
+  static T *GetInstance() {
+    if (GetObject() == nullptr) {
+      if constexpr (WithLock) {
+        grc::ScopedSpinLock lock(GetSpinLock(), 0);
+        new ((T *)GetData()) T();
+        GetObject() = (T *)GetData();
+      } else {
+        new ((T *)GetData()) T();
+        GetObject() = (T *)GetData();
+      }
+    }
+    return GetObject();
+  }
+
+  static grc::SpinLock &GetSpinLock() {
+    static char spinlock_data_[sizeof(grc::SpinLock)] = {0};
+    return *(grc::SpinLock *)spinlock_data_;
+  }
+
+  static T *GetData() {
+    static char data_[sizeof(T)] = {0};
+    return (T *)data_;
+  }
+
+  static T *&GetObject() {
+    static T *obj_ = nullptr;
+    return obj_;
+  }
+};
+
+}  // namespace grc
+```
+
+Notes:
+
+- **Thread safety.** When `WithLock` is `true`, the first thread to reach
+  `GetInstance` takes the spin lock before constructing the object, so multiple
+  threads racing to initialize the singleton won't cause a double-construction or
+  a segfault.
+- **Why static locals?** Each `static` local (`data_`, `obj_`, `spinlock_data_`)
+  is initialized on first use and needs no out-of-line definition, which is what
+  makes this "header only."
+- **The catch.** If two different shared objects (`.so`/`.dll`) each instantiate
+  `Singleton<T>`, each may get its **own** copy of these statics, and therefore its
+  own instance. This also confuses Python extension modules. If you need one
+  instance across libraries, use the robust version below.
+
+## Robust C-style singleton
+
+The problem with header-only singletons is that the storage is defined in every
+translation unit / shared object that uses it. The robust version fixes this by
+storing the instance in a **single global pointer that is defined exactly once**
+(in one `.cc` file). Every shared object then refers to that same pointer.
+
+```cpp
+/**
+ * C-style pointer singleton with global variables.
+ *
+ * No DLL decoration here: globals declared via this macro are typically
+ * local to a single DLL, or -- when accessed across DLL boundaries on
+ * Windows -- must be decorated with a per-DLL API macro at the use site
+ * (Windows requires explicit __declspec(dllimport) on data symbols
+ * imported from another DLL; CMake's WINDOWS_EXPORT_ALL_SYMBOLS handles
+ * function symbols but not data).
+ */
+#define CTP_DEFINE_GLOBAL_PTR_VAR_H(T, NAME) extern __TU(T) * NAME;
+#define CTP_DEFINE_GLOBAL_PTR_VAR_CC(T, NAME) __TU(T) *NAME = nullptr;
+#define CTP_GET_GLOBAL_PTR_VAR(T, NAME) grc::GetGlobalPtrVar<__TU(T)>(NAME)
+
+template <typename T>
+static inline T *GetGlobalPtrVar(T *&instance) {
+  if (instance == nullptr) {
+    instance = new T();
+  }
+  return instance;
+}
+```
+
+How to use it:
+
+```cpp
+// --- config.h ---
+// Declares (but does not define) the global pointer.
+CTP_DEFINE_GLOBAL_PTR_VAR_H(ConfigurationManager, kConfig)
+#define CONFIG CTP_GET_GLOBAL_PTR_VAR(ConfigurationManager, kConfig)
+
+// --- config.cc ---
+// Defines the global pointer EXACTLY ONCE, in a single translation unit.
+CTP_DEFINE_GLOBAL_PTR_VAR_CC(ConfigurationManager, kConfig)
+```
+
+Notes:
+
+- **Why it's robust.** Because the pointer `kConfig` is *defined* in only one
+  `.cc` file, the linker produces a single symbol. Every shared object that
+  includes `config.h` sees an `extern` declaration of the same symbol, so they all
+  share one instance. This avoids the "one copy per DLL" problem of the header-only
+  version and behaves correctly with Python extension modules.
+- **`__TU(T)`** is a small helper macro that lets you pass a template type
+  containing commas (e.g. `std::map<int, int>`) through another macro without the
+  preprocessor splitting it into multiple arguments.
+- **Windows caveat.** As the comment notes, crossing DLL boundaries on Windows
+  requires decorating the data symbol (`__declspec(dllimport/dllexport)`); CMake's
+  `WINDOWS_EXPORT_ALL_SYMBOLS` exports functions but **not** data, so a global
+  pointer needs an explicit per-DLL API macro at the use site. On Linux this is
+  not an issue.
+- **Trade-off.** This is more boilerplate (a `.h` declaration plus a `.cc`
+  definition) than the header-only template, and the `GetGlobalPtrVar` shown here
+  is not itself thread-safe about first construction -- add a lock (as in the
+  simpler singleton) if multiple threads may initialize it concurrently.
+
+## Which one should I use?
+
+- Reach for the **simpler regular singleton** for single-binary programs and quick
+  work -- it's the least code.
+- Use the **robust C-style singleton** when the singleton must be shared across
+  multiple shared objects, or when your code will be loaded by Python, where
+  duplicated instances cause hard-to-debug correctness issues.

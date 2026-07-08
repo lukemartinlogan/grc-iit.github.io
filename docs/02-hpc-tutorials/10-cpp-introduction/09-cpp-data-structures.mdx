@@ -1,0 +1,440 @@
+# C++ Data Structures
+The objective of this section is to provide an overview of the capabilities and
+performance characteristics of our favorite data structures. This is not a
+documentation page for every single container provided in C++.
+
+## std::vector
+
+An [std::vector](https://cplusplus.com/reference/vector/vector/) stores objects
+sequentially in memory. They are also known as dynamically-sized arrays. Unlike
+typical arrays, vectors do not necessarily have a fixed size. We describe the
+basic usage below. This isn't comprehensive, check the documentation for a full
+list of features.
+
+### Construct
+
+There are a few ways to create a vector
+```cpp
+#include <vector>
+void TestVectorConstruct() {
+  // An empty vector, no space allocated
+  std::vector<int> vec1;
+  // A vector of 100 ints, ints can be any value
+  std::vector<int> vec2(100);
+  // A vector of 100 ints, ints are initialized to 0
+  std::vector<int> vec3(100, 0);
+  // A vector of 5 ints, initialized to 0, 1, 2, 3, 4
+  std::vector<int> vec4{0, 1, 2, 3, 4};
+}
+```
+
+### Insert and Modify
+
+There are a few ways to add and modify elements in a vector
+```cpp
+#include <vector>
+void TestVectorModify() {
+  std::vector<int> vec(100);
+  // Add element to the back of a vector
+  // Size of the vector increases by 1 (now 101)
+  vec.emplace_back(2);
+  // Insert element at index 1.
+  // Size of the vector increases by 1 (now 102)
+  vec.emplace(vec.begin() + 1, 1);
+  // Modify first element of vector
+  // Size of the vector does not change (still 102)
+  vec[0] = 1;
+}
+```
+
+### Access
+
+There are various ways to access elements of a vector:
+```cpp
+#include <vector>
+void TestVectorAccess() {
+  std::vector<int> vec(100);
+  // Get first element (operator)
+  int val1 = vec[0];
+  // Get first element (method)
+  int val2 = vec.front();
+  // Get first element (iterator)
+  std::vector<int>::iterator it3 = vec.begin();
+  int val3 = *it3;
+
+  // Get last element (operator)
+  int val4 = vec[vec.size() - 1];
+  // Get last element (method)
+  int val5 = vec.back();
+  // Get last element (iterator)
+  std::vector<int>::iterator it5 = vec.end() - 1;
+  int val6 = *it5;
+
+  // Get element at index 10 (operator)
+  int val7 = vec[10];
+  // Get element at index 10 (iterator)
+  std::vector<int>::iterator it8 = vec.begin() + 10;
+  int val8 = *it8;
+
+  // Iterate over all elements of the vector
+  for (int &val : vec) {
+    // Do something with val
+  }
+  // Iterate over all elements of the vector
+  for (auto it = vec.begin(); it != vec.end(); ++it) {
+    int &val = *it;
+  }
+}
+```
+
+### Erase
+
+There are a few methods to erase elements from a vector.
+```cpp
+#include <vector>
+void TestVectorErase() {
+  // Removes the element at index 2 (value 3)
+  std::vector<int> vec1{1, 2, 3, 4, 5};
+  vec1.erase(vec1.begin() + 2);
+  // Removes values 2 through 4
+  // Note, erase does NOT erase the value at vec.begin() + 4
+  std::vector<int> vec2{1, 2, 3, 4, 5};
+  vec2.erase(vec2.begin() + 1, vec2.begin() + 4);
+  // Removes all elements from the vector
+  std::vector<int> vec3{1, 2, 3, 4, 5};
+  vec3.clear();
+}
+```
+
+### Capacity & Statistics
+
+Vectors have two main statistics:
+1. Capacity: the number of elements that can be stored in the vector
+2. Size: the number of elements currently stored in the vector
+
+Capacity >= Size.
+
+To increase capacity without creating new elements, use reserve(). To increase size (i.e., add and construct elements), use resize().
+
+```cpp
+#include <vector>
+#include <cassert>  // for assert
+void TestVectorSize() {
+  std::vector<int> vec;
+  // Initially empty
+  assert(vec.size() == 0);
+  // Increase to capacity 100
+  vec.reserve(100);
+  assert(vec.size() == 0);
+  assert(vec.capacity() == 100);
+  // Add elements to the vector
+  // emplace_back is fast since there is capacity
+  vec.emplace_back(0);
+  vec.emplace_back(1);
+  assert(vec.size() == 2);
+  // Increase size to 150
+  // Capacity is not necessarily equal to 150
+  vec.resize(150);
+  assert(vec.size() == 150);
+  // Resize can be called with a smaller value
+  vec.resize(50);
+  assert(vec.size() == 50);
+}
+```
+
+### Performance Characteristics
+
+|Operation|Runtime Complexity|Memory Complexity|
+|-------|----------|------|
+|emplace_back|O(1) amortized. Most of the time, there will be enough capacity in the vector to avoid a reallocation. However, when the capacity is reached, a copy of the vector will be made.|O(1) or O(N). May end up creating a copy of the vector if capacity is reached.|
+|emplace|O(N) since the vector will have to be shifted. It may also be copied if there's not enough capacity.|O(1) or O(N). May end up creating a copy of the vector if capacity is reached.|
+|accessors ([],begin,end,front,back,etc.)|O(1)|O(1)|
+|reserve|O(1) or O(N). O(1) if new size is less than old size. Vectors will not make the data smaller, it will just store the new size. O(N) otherwise.|O(1) or O(N) for the same reasons.|
+|resize|O(N). Will make a copy of vector if new size is larger than old size. Will erase elements from the vector if new size is smaller than old size.|O(1) or O(N). O(1) if new size is smaller than old size. O(N) otherwise.|
+|erase|O(N). Will shift elements after the erased value to the left.|O(1)|
+|size / capacity|O(1)|O(1)|
+
+When to use a vector?
+1. If the number of elements is fixed or has a reasonable upper bound
+2. You are performing many get or modify-in-place operations
+3. It makes sense to access an element by an integer index between 0 and
+the size of the vector
+4. If you do not have to resize the vector often
+5. If random access speed is important to you
+
+Considerations of using a vector:
+1. emplace_back can be slow since it will trigger resizes eventually.
+Even though the amortized cost is O(1), it can be extremely slow
+if inserting many elements.
+2. Vectors can have very poor memory utilization if you rely too much
+on the dynamic ability. To make them have an O(1) complexity, they multiply
+the capacity of the vector by a factor. As the size of the vector grows,
+the space waste can be pretty bad.
+
+## std::list
+
+[std::list](https://cplusplus.com/reference/list/list/list/) is typically implemented as doubly-linked list. We describe the basic usage below.
+This isn't comprehensive, check the documentation for a full list
+of features.
+
+### Construct
+
+These are the main ways to construct a new std::list.
+```cpp
+#include <list>
+void TestListConstruct() {
+  // An empty list
+  std::list<int> list1;
+  // A list of 100 ints, ints can be any value
+  std::list<int> list2(100);
+  // A list of 100 ints, ints are initialized to 0
+  std::list<int> list3(100, 0);
+  // A list of 5 ints, initialized to 0, 1, 2, 3, 4
+  std::list<int> list4{0, 1, 2, 3, 4};
+}
+```
+
+### Insert + Modify
+
+These are the main ways to insert + modify elements in an std::list.
+```cpp
+#include <list>
+void TestListModify() {
+  std::list<int> list{1, 2, 3};
+  // Add an element to the back of the list
+  // list is now 1, 2, 3, 4
+  list.push_back(4);
+  // Add an element to the front of the list
+  // list is now 0, 1, 2, 3, 4
+  list.push_front(0);
+  // Insert an element before the second position
+  // list is now 0, 10, 1, 2, 3, 4
+  std::list<int>::iterator it = list.begin();
+  ++it;
+  list.insert(it, 10);
+  // Erase the first element
+  // list is now 10, 1, 2, 3, 4
+  list.erase(list.begin());
+}
+```
+
+## std::map
+
+[std::map](https://cplusplus.com/reference/map/map/) is an *ordered* associative
+container that maps unique keys to values. It is typically implemented as a
+balanced binary search tree (a red-black tree), so its keys are always kept in
+sorted order and lookups are O(log N).
+
+### Construct
+
+```cpp
+#include <map>
+#include <string>
+void TestMapConstruct() {
+  // An empty map from std::string to int
+  std::map<std::string, int> map1;
+  // A map initialized with key-value pairs
+  std::map<std::string, int> map2{{"a", 1}, {"b", 2}, {"c", 3}};
+}
+```
+
+### Insert and Access
+
+```cpp
+#include <map>
+#include <string>
+void TestMapModify() {
+  std::map<std::string, int> ages;
+  // Insert (or overwrite) via operator[]; creates the key if absent
+  ages["alice"] = 30;
+  // insert() does nothing if the key already exists
+  ages.insert({"bob", 25});
+  // emplace() constructs the pair in place
+  ages.emplace("carol", 40);
+
+  // WARNING: operator[] inserts a default-valued entry if the key is missing
+  int a = ages["alice"];
+  // Safe lookup: find() returns end() when the key is not present
+  std::map<std::string, int>::iterator it = ages.find("dave");
+  if (it != ages.end()) {
+    int d = it->second;
+  }
+  // Check membership without inserting (C++20: ages.contains("bob"))
+  bool has_bob = ages.count("bob") > 0;
+}
+```
+
+### Erase and Iterate
+
+```cpp
+#include <map>
+#include <string>
+void TestMapErase() {
+  std::map<std::string, int> ages{{"alice", 30}, {"bob", 25}};
+  // Erase by key
+  ages.erase("bob");
+  // Iterating a map visits keys in sorted order.
+  // Note the key type is const: std::pair<const std::string, int>
+  for (const std::pair<const std::string, int> &kv : ages) {
+    // kv.first is the key, kv.second is the value
+  }
+}
+```
+
+## std::set
+
+[std::set](https://cplusplus.com/reference/set/set/) stores a sorted collection of
+unique keys. It is essentially an `std::map` without the associated values, and
+shares the same balanced-BST implementation and O(log N) operations.
+
+```cpp
+#include <set>
+void TestSet() {
+  // Duplicates are ignored; this stores {1, 2, 3}
+  std::set<int> nums{3, 1, 2, 2};
+  // insert() returns a pair; its bool is false if the key was already present
+  nums.insert(4);
+  // Membership test (C++20: nums.contains(2))
+  bool has_two = nums.count(2) > 0;
+  // Erase by value
+  nums.erase(1);
+  // Iterating visits elements in sorted order: 2, 3, 4
+  for (int n : nums) {
+    // Do something with n
+  }
+}
+```
+
+## std::unordered_map
+
+[std::unordered_map](https://cplusplus.com/reference/unordered_map/unordered_map/)
+maps unique keys to values using a **hash table**. Lookup, insert, and erase are
+O(1) on average (O(N) in the pathological worst case). Unlike `std::map`, the keys
+are **not** stored in any particular order. This is usually the default choice for
+key-value storage when you don't need sorted keys.
+
+```cpp
+#include <string>
+#include <unordered_map>
+void TestUnorderedMap() {
+  std::unordered_map<std::string, int> ages{{"alice", 30}, {"bob", 25}};
+  // Insert or update
+  ages["carol"] = 40;
+  ages.insert({"dave", 22});
+  // Lookup
+  std::unordered_map<std::string, int>::iterator it = ages.find("alice");
+  if (it != ages.end()) {
+    int a = it->second;
+  }
+  // Membership (C++20: ages.contains("bob"))
+  bool has_bob = ages.count("bob") > 0;
+  // Erase
+  ages.erase("bob");
+  // Iteration order is unspecified
+  for (const std::pair<const std::string, int> &kv : ages) {
+    // kv.first, kv.second
+  }
+}
+```
+
+## std::unordered_set
+
+[std::unordered_set](https://cplusplus.com/reference/unordered_set/unordered_set/)
+is the hash-table counterpart of `std::set`: a collection of unique keys with
+average O(1) operations and no ordering guarantees.
+
+```cpp
+#include <string>
+#include <unordered_set>
+void TestUnorderedSet() {
+  std::unordered_set<std::string> names{"alice", "bob"};
+  // Insert
+  names.insert("carol");
+  // Membership (C++20: names.contains("alice"))
+  bool has_alice = names.count("alice") > 0;
+  // Erase
+  names.erase("bob");
+  // Iteration order is unspecified
+  for (const std::string &name : names) {
+    // Do something with name
+  }
+}
+```
+
+## std::queue
+
+[std::queue](https://cplusplus.com/reference/queue/queue/) is a **container
+adapter** providing first-in-first-out (FIFO) access. By default it wraps an
+`std::deque`. You can only touch the front and back — there is no iteration or
+random access.
+
+```cpp
+#include <queue>
+void TestQueue() {
+  std::queue<int> q;
+  // Add to the back
+  q.push(1);
+  q.push(2);
+  q.push(3);
+  // Inspect the ends
+  int f = q.front();  // 1 (oldest element)
+  int b = q.back();   // 3 (newest element)
+  // Remove from the front (pop() returns void)
+  q.pop();  // removes 1; front() is now 2
+  // Size / empty
+  bool is_empty = q.empty();
+  auto n = q.size();
+}
+```
+
+## std::priority_queue
+
+[std::priority_queue](https://cplusplus.com/reference/queue/priority_queue/) is a
+container adapter that always keeps the highest-priority element accessible at the
+top. It is implemented as a binary heap over an `std::vector`, giving O(log N)
+push/pop and O(1) access to the top. By default it is a **max-heap** (largest on
+top).
+
+```cpp
+#include <functional>  // std::greater
+#include <queue>
+#include <vector>
+void TestPriorityQueue() {
+  // Default: a max-heap. The largest element is always on top.
+  std::priority_queue<int> max_heap;
+  max_heap.push(3);
+  max_heap.push(1);
+  max_heap.push(2);
+  int top = max_heap.top();  // 3 (largest)
+  max_heap.pop();            // removes 3; top() is now 2
+
+  // Supply std::greater to build a min-heap (smallest on top).
+  std::priority_queue<int, std::vector<int>, std::greater<int>> min_heap;
+  min_heap.push(3);
+  min_heap.push(1);
+  min_heap.push(2);
+  int smallest = min_heap.top();  // 1
+}
+```
+
+## Choosing a container
+
+|Container|Ordering|Lookup / Insert / Erase|Underlying structure|
+|---|---|---|---|
+|`std::vector`|Insertion order|access O(1), insert/erase O(N)|Dynamic array|
+|`std::list`|Insertion order|access O(N), insert/erase O(1) at a known position|Doubly-linked list|
+|`std::map` / `std::set`|Sorted by key|O(log N)|Balanced BST (red-black tree)|
+|`std::unordered_map` / `std::unordered_set`|None|O(1) average, O(N) worst|Hash table|
+|`std::queue`|FIFO|push / pop / front / back O(1)|Adapter over `std::deque`|
+|`std::priority_queue`|Highest priority first|push / pop O(log N), top O(1)|Binary heap over `std::vector`|
+
+Guidance:
+
+1. Use `std::map` / `std::set` when you need the keys kept in **sorted** order or
+   need range queries (e.g. "all keys between X and Y").
+2. Use `std::unordered_map` / `std::unordered_set` when you just need fast
+   average-case lookup and order does not matter — this is the usual default for
+   key-value storage.
+3. Use `std::queue` for FIFO processing, such as a work/task queue.
+4. Use `std::priority_queue` when you always need to pull the highest- (or
+   lowest-) priority item next, such as in scheduling or Dijkstra's algorithm. 

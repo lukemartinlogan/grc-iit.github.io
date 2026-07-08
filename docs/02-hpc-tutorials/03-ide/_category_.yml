@@ -1,0 +1,4 @@
+label: "IDEs"
+link:
+  type: generated-index
+  description: "An overview of popular code editors/IDEs and the extensions that make C++ development on Linux pleasant."

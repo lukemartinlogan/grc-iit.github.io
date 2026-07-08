@@ -1,0 +1,36 @@
+These tutorials are meant to be worked through inside the tutorial **Dev
+Container**, which gives you a ready-made C++ environment (compiler, CMake,
+debugger, MPI, Boost, spack, cpplint, and the clangd language server) with **zero
+local setup** beyond Docker and an editor. See the
+[Dev Containers](../03-ide/01-overview.md#dev-containers) overview for background.
+
+Prerequisites:
+
+* [Docker](../02-containers/01-docker-basics.md)
+* [VS Code](https://code.visualstudio.com/) (or Cursor) with the
+  [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+  extension (`ms-vscode-remote.remote-containers`)
+
+Clone the tutorial and open it in the container:
+```bash
+git clone https://github.com/grc-iit/grc-tutorial.git
+cd grc-tutorial
+code .
+```
+
+Then open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run
+**"Dev Containers: Reopen in Container"**. VS Code builds the image, installs the
+C++ extensions *inside* the container, and reopens the project there. The
+container is defined in the tutorial's [`.devcontainer/`](https://github.com/grc-iit/grc-tutorial/tree/main/.devcontainer)
+directory.
+
+Once you are inside the container, the tutorial code is at the workspace root and
+the `GRC_TUTORIAL` environment variable is **already defined for you** (the Dev
+Container sets it to the workspace folder), so the `cd ${GRC_TUTORIAL}/cpp/...`
+commands in the following pages just work — no setup needed.
+
+:::note
+Docker does not save state outside your workspace. Files you create *inside* the
+mounted project directory are preserved on your host, but changes elsewhere in the
+container are lost when it is rebuilt.
+:::

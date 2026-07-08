@@ -1,0 +1,282 @@
+# C++ References and Pointers
+C++ gives you several ways to pass data around and to manage memory. This section
+goes into the details of value categories (rvalues/lvalues), references, copies
+vs. moves, and the different pointer types. For each pointer type we show an
+**example** (the right way) and a **non-example** (a common mistake), so you can
+recognize the pitfalls.
+
+## Rvalues and Lvalues
+
+In C++, every expression yields either an **lvalue** or an **rvalue**:
+
+- **Lvalues** are expressions that refer to objects with a persistent identity —
+  variables, data members, or anything with a name. An lvalue can appear on the
+  left or the right side of an assignment.
+- **Rvalues** are temporary values without a persistent identity, usually the
+  result of an operation. They typically appear only on the right side of an
+  assignment.
+
+```cpp
+int x = 42;      // 'x' is an lvalue
+int y = x + 5;   // 'x + 5' is an rvalue (a temporary)
+```
+
+This distinction matters because it drives **when the compiler can move instead of
+copy** (see below), and which kind of reference can bind to an expression.
+
+## References
+
+A reference is an alias for an existing object. Unlike a pointer, a reference
+cannot be null and cannot be reseated to refer to a different object.
+
+- An **lvalue reference** (`T&`) binds to a named object. A **const lvalue
+  reference** (`const T&`) can also bind to a temporary and is the idiomatic way
+  to pass large objects without copying.
+- An **rvalue reference** (`T&&`) binds to a temporary and is what makes move
+  semantics possible.
+
+```cpp
+// Example: pass a large object by const reference to avoid a copy.
+void Print(const std::string &s) {  // no copy is made
+  std::cout << s << std::endl;
+}
+```
+
+```cpp
+// Non-example: returning a reference to a local variable.
+const std::string &Bad() {
+  std::string local = "temporary";
+  return local;  // 'local' is destroyed on return -> dangling reference
+}
+```
+
+The non-example compiles (often with a warning) but leaves you with a reference to
+a destroyed object. Return by value instead.
+
+## Copies and Moves
+
+Constructors and destructors control how objects are created, copied, moved, and
+destroyed.
+
+### Copy constructor
+A copy constructor creates a new object as an independent copy of an existing one.
+It is invoked when an object is passed or returned by value.
+
+```cpp
+class MyClass {
+ public:
+  explicit MyClass(int d) : data_(d) {}
+
+  // Copy constructor: duplicate the value.
+  MyClass(const MyClass &other) : data_(other.data_) {}
+
+ private:
+  int data_;
+};
+
+int main() {
+  MyClass obj1(42);
+  MyClass obj2 = obj1;  // copy constructor invoked; obj1 is unchanged
+  return 0;
+}
+```
+
+### Move constructor
+A move constructor (C++11) transfers ownership of a resource (such as heap memory)
+from one object to another instead of copying it. It is invoked for rvalues,
+typically improving performance.
+
+```cpp
+#include <cstdlib>
+#include <cstring>
+#include <utility>  // std::move
+
+class MyString {
+ public:
+  explicit MyString(const char *s) : str_(strdup(s)) {}
+  ~MyString() { free(str_); }
+
+  // Move constructor: steal the buffer, leave 'other' empty.
+  MyString(MyString &&other) noexcept : str_(other.str_) {
+    other.str_ = nullptr;  // 'other' must be left in a valid, destructible state
+  }
+
+ private:
+  char *str_;
+};
+
+int main() {
+  MyString str1("Hello, World!");
+  MyString str2 = std::move(str1);  // move constructor invoked
+  // 'str1' is now in a valid but unspecified (empty) state
+  return 0;
+}
+```
+
+Note that we set `other.str_ = nullptr` so that when `other` is destroyed it does
+**not** `free` the buffer we just stole — otherwise both objects would free the
+same pointer (a double free).
+
+## Raw Pointers
+
+A raw pointer (`T*`) simply stores an address. C++ has no rule about who is
+responsible for freeing what a raw pointer points to, so the convention is:
+
+> A raw pointer is a **non-owning** "borrow." Whoever created the object owns it
+> and is responsible for its lifetime.
+
+**Example — a raw pointer as a non-owning observer:**
+
+```cpp
+// Good: the pointer only observes; ownership stays with the caller.
+void PrintValue(const int *value) {
+  if (value != nullptr) {
+    std::cout << *value << std::endl;
+  }
+}
+
+int main() {
+  int x = 42;
+  PrintValue(&x);  // main() still owns 'x'
+  return 0;
+}
+```
+
+**Non-example — a raw *owning* pointer with `new`/`delete`:**
+
+```cpp
+// Bad: manual ownership is easy to get wrong.
+void Leaky(bool fail) {
+  int *data = new int(42);
+  if (fail) {
+    return;  // leak: 'delete data' never runs
+  }
+  delete data;
+}
+```
+
+Any early return, exception, or forgotten `delete` leaks memory (or, if you delete
+twice, corrupts the heap). This is exactly the problem smart pointers solve — for
+anything that owns a resource, prefer a smart pointer over raw `new`/`delete`.
+
+## Smart Pointers
+
+**Smart pointers** provide automatic memory management by tying an object's
+lifetime to the pointer's scope. When the smart pointer goes away, the object is
+freed automatically. C++ provides three:
+
+### `std::unique_ptr`
+
+- **Ownership:** exclusive. A `unique_ptr` cannot be copied, only moved.
+- **Use case:** a single, clear owner of a heap object.
+- **Overhead:** none beyond a raw pointer.
+
+**Example:**
+
+```cpp
+#include <memory>
+
+// Good: one owner; ownership is transferred explicitly with std::move.
+std::unique_ptr<int> num = std::make_unique<int>(42);
+std::unique_ptr<int> owner = std::move(num);  // 'num' is now nullptr
+```
+
+**Non-example:**
+
+```cpp
+#include <memory>
+
+// Bad: unique_ptr cannot be copied — this does not compile.
+std::unique_ptr<int> a = std::make_unique<int>(42);
+std::unique_ptr<int> b = a;  // ERROR: copy constructor is deleted
+```
+
+The compile error is the point: `unique_ptr` forces you to be explicit about
+transferring ownership (`std::move(a)`). A subtler runtime version of the same
+mistake is handing the same raw pointer to two owners
+(`unique_ptr<int> p2(raw); unique_ptr<int> p1(raw);`), which double-frees. Always
+create the object through `std::make_unique`.
+
+### `std::shared_ptr`
+
+- **Ownership:** shared among all `shared_ptr` copies via a reference count.
+- **Use case:** when several owners legitimately need the same object and you can't
+  predict which one outlives the others.
+- **Overhead:** an atomic reference count (higher than `unique_ptr`).
+
+**Example:**
+
+```cpp
+#include <memory>
+
+// Good: copies share ownership; the int is freed when the last owner is gone.
+std::shared_ptr<int> a = std::make_shared<int>(42);
+std::shared_ptr<int> b = a;  // reference count is now 2
+```
+
+**Non-example:**
+
+```cpp
+#include <memory>
+
+// Bad: two shared_ptrs built from the same raw pointer create two independent
+// control blocks. Each thinks it is the sole owner -> double free.
+int *raw = new int(42);
+std::shared_ptr<int> p1(raw);
+std::shared_ptr<int> p2(raw);  // undefined behavior when both destruct
+```
+
+Build the object once with `std::make_shared` and then **copy the `shared_ptr`**
+to add owners — never wrap the same raw pointer twice. Also avoid reaching for
+`shared_ptr` by default: if there is a single owner, `unique_ptr` is cheaper and
+clearer.
+
+### `std::weak_ptr`
+
+- **Ownership:** none. A `weak_ptr` is a non-owning reference to an object managed
+  by a `shared_ptr`; it does not keep the object alive.
+- **Use case:** breaking reference cycles (two objects that own each other via
+  `shared_ptr` would never be freed) and caching.
+- **Usage:** call `.lock()` to obtain a `shared_ptr` if the object still exists.
+
+**Example:**
+
+```cpp
+#include <memory>
+
+// Good: check the object is still alive by locking before use.
+std::shared_ptr<int> shared = std::make_shared<int>(42);
+std::weak_ptr<int> weak = shared;
+
+if (std::shared_ptr<int> locked = weak.lock()) {
+  std::cout << *locked << std::endl;  // safe: 'locked' keeps it alive here
+}
+```
+
+**Non-example:**
+
+```cpp
+#include <memory>
+
+// Bad: assuming the object outlives the weak_ptr.
+std::weak_ptr<int> weak;
+{
+  std::shared_ptr<int> shared = std::make_shared<int>(42);
+  weak = shared;
+}  // 'shared' is destroyed here, so 'weak' is now expired
+
+std::shared_ptr<int> locked = weak.lock();  // returns nullptr
+std::cout << *locked << std::endl;  // undefined behavior: dereferencing nullptr
+```
+
+The whole point of `weak_ptr` is that the object may already be gone, so you must
+check the result of `.lock()` before dereferencing it.
+
+## Dangling Pointers
+
+A **dangling pointer** references memory that has already been freed, which is
+undefined behavior. Every non-example above is a flavor of this problem: a
+double free, a use-after-free, or a reference to a destroyed local. Using the
+right smart pointer for each ownership situation — `unique_ptr` for a single
+owner, `shared_ptr` for shared ownership, `weak_ptr` to observe without owning —
+eliminates most dangling-pointer bugs by making ownership explicit.
