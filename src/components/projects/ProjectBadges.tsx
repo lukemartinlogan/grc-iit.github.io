@@ -1,3 +1,4 @@
+import Link from "@docusaurus/Link";
 import React from "react";
 import clsx from "clsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -14,10 +15,7 @@ type ProjectBadgesProps = {
 
 import styles from "./ProjectBadges.module.css";
 
-export default function ProjectBadges({
-  addMargin = true,
-  projectId,
-}: ProjectBadgesProps) {
+export default function ProjectBadges({ addMargin = true, projectId }: ProjectBadgesProps) {
   const { projects } = usePluginData("grc-plugin-projects") as {
     projects: Project[];
   };
@@ -35,18 +33,11 @@ export default function ProjectBadges({
   }
   return (
     <div className={clsx(addMargin && "margin-bottom--md")}>
-      {isOurs && (
-        <span className="badge badge--primary margin-right--xs">GRC-led</span>
-      )}
-      {isFunded && (
-        <span className="badge badge--success margin-right--xs">Funded</span>
-      )}
+      {isOurs && <span className="badge badge--primary margin-right--xs">GRC-led</span>}
+      {isFunded && <span className="badge badge--success margin-right--xs">Funded</span>}
       {typeof sourceLink !== "undefined" && (
-        <a
-          className={clsx(
-            "badge badge--secondary margin-right--xs",
-            styles.badgeDarker
-          )}
+        <Link
+          className={clsx("badge badge--secondary margin-right--xs", styles.badgeDarker)}
           href={sourceLink}
           rel="noreferrer"
           style={{ color: "var(--ifm-color-black) !important" }}
@@ -59,10 +50,10 @@ export default function ProjectBadges({
             size="sm"
             style={{ color: "var(--ifm-color-black)" }}
           />
-        </a>
+        </Link>
       )}
       {typeof tutorialLink !== "undefined" && (
-        <a
+        <Link
           className="badge badge--danger margin-right--xs"
           href={tutorialLink}
           rel="noreferrer"
@@ -80,7 +71,7 @@ export default function ProjectBadges({
             size="sm"
             style={{ color: "var(--ifm-color-black)" }}
           />
-        </a>
+        </Link>
       )}
     </div>
   );

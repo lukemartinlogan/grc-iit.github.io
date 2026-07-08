@@ -1,3 +1,4 @@
+import Heading from "@theme/Heading";
 import React from "react";
 import Link from "@docusaurus/Link";
 import clsx from "clsx";
@@ -11,7 +12,7 @@ import {
 
 import styles from "./JobItem.module.css";
 
-export default function JobItem({
+function JobItem({
   applicationLink,
   detailLink,
   detailText,
@@ -26,7 +27,9 @@ export default function JobItem({
   return (
     <div className={clsx("margin-bottom--md padding--md", styles.container)}>
       <div className={styles.contentContainer}>
-        <h3 className="margin-bottom--none">{title}</h3>
+        <Heading as="h3" className="margin-bottom--none">
+          {title}
+        </Heading>
         <div className={clsx("margin-bottom--md", styles.periodContainer)}>
           {postedAt && (
             <>
@@ -35,9 +38,7 @@ export default function JobItem({
                 icon={faClock}
                 size="sm"
               />
-              <span className={clsx("margin-right--md", styles.periodText)}>
-                {postedAt}
-              </span>
+              <span className={clsx("margin-right--md", styles.periodText)}>{postedAt}</span>
             </>
           )}
           {location && (
@@ -47,9 +48,7 @@ export default function JobItem({
                 icon={faLocationDot}
                 size="sm"
               />
-              <span className={clsx("margin-right--md", styles.periodText)}>
-                {location}
-              </span>
+              <span className={clsx("margin-right--md", styles.periodText)}>{location}</span>
             </>
           )}
         </div>
@@ -79,11 +78,11 @@ export default function JobItem({
           )}
         </div>
         {!isOpen && (
-          <small className={styles.smallNote}>
-            Please check back for future opportunities.
-          </small>
+          <small className={styles.smallNote}>Please check back for future opportunities.</small>
         )}
       </div>
     </div>
   );
 }
+
+export default JobItem;

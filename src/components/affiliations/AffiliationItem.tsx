@@ -1,3 +1,4 @@
+import Link from "@docusaurus/Link";
 import React from "react";
 import { Affiliation } from "@site/src/types";
 
@@ -7,7 +8,7 @@ type AffiliationItemProps = {
   affiliation: Affiliation;
 };
 
-export default function AffiliationItem({ affiliation }: AffiliationItemProps) {
+function AffiliationItem({ affiliation }: AffiliationItemProps) {
   return (
     <div className="col col--4">
       <div className={styles.innerContainer}>
@@ -19,11 +20,13 @@ export default function AffiliationItem({ affiliation }: AffiliationItemProps) {
           />
         </div>
         <div className="padding-vert--sm text--center">
-          <a href={affiliation.url} target="_blank">
+          <Link href={affiliation.url} target="_blank">
             {affiliation.name}
-          </a>
+          </Link>
         </div>
       </div>
     </div>
   );
 }
+
+export default AffiliationItem;

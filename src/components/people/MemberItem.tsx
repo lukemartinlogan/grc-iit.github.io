@@ -1,3 +1,4 @@
+import Link from "@docusaurus/Link";
 import React from "react";
 import clsx from "clsx";
 import { Member } from "@site/src/types";
@@ -20,12 +21,12 @@ export default function MemberItem({ member }: MemberItemProps) {
           />
         </div>
         {member.type === "researcher" || member.type === "engineer" ? (
-          <a
+          <Link
             className={clsx("text--bold text--center", styles.name)}
-            href={`/members/${member.slug}`}
+            to={`/members/${member.slug}`}
           >
             {member.name}
-          </a>
+          </Link>
         ) : (
           <div className={clsx("text--bold text--center", styles.name)}>
             {member.name}

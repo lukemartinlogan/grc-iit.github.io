@@ -1,4 +1,5 @@
 import DebouncedInput from "@site/src/components/common/DebouncedInput";
+import Link from "@docusaurus/Link";
 import React, { Fragment, useCallback, useMemo, useState } from "react";
 import clsx from "clsx";
 import {
@@ -14,12 +15,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  Publication,
-  PublicationAuthor,
-  PublicationTag,
-  PublicationType,
-} from "@site/src/types";
+import { Publication, PublicationAuthor, PublicationTag, PublicationType } from "@site/src/types";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import Tag from "../common/Tag";
@@ -46,9 +42,7 @@ function ActiveColumnFilters({
       const column = getColumn(columnId);
       const filterValue = column.getFilterValue();
       if (filterValue instanceof Array) {
-        const newFilterValue = filterValue.filter(
-          (value) => value !== removedValue
-        );
+        const newFilterValue = filterValue.filter((value) => value !== removedValue);
         if (newFilterValue.length === 0) {
           column.setFilterValue(undefined);
         } else {
@@ -94,8 +88,7 @@ function Authors({
 }) {
   const addFilter = useCallback(
     (author: PublicationAuthor) => {
-      const filterValue = (column.getFilterValue() ||
-        []) as PublicationAuthor[];
+      const filterValue = (column.getFilterValue() || []) as PublicationAuthor[];
       if (!filterValue.includes(author)) {
         column.setFilterValue([...filterValue, author]);
       }
@@ -119,9 +112,9 @@ function Links({ data }: { data: Record<string, string> }) {
     <div className={styles.links}>
       {Object.entries(data).map(([key, value], i) => (
         <Fragment key={`link-${i}`}>
-          <a className={styles.link} href={value} target="_blank">
+          <Link className={styles.link} href={value} target="_blank">
             {key === "pdf" ? "PDF" : key === "bibtex" ? "BibTeX" : key}
-          </a>
+          </Link>
           {i !== Object.keys(data).length - 1 && ", "}
           {i !== Object.keys(data).length - 1 && <br />}
         </Fragment>
@@ -130,13 +123,7 @@ function Links({ data }: { data: Record<string, string> }) {
   );
 }
 
-function Tags({
-  column,
-  data,
-}: {
-  column: Column<Publication, string>;
-  data: PublicationTag[];
-}) {
+function Tags({ column, data }: { column: Column<Publication, string>; data: PublicationTag[] }) {
   const addFilter = useCallback(
     (tag: PublicationTag) => {
       const filterValue = (column.getFilterValue() || []) as PublicationTag[];
@@ -202,9 +189,7 @@ export default function PublicationTable({
         cell: (info) => (
           <Authors
             column={info.column}
-            data={
-              info.getValue().split(ACCESSOR_SEPARATOR) as PublicationAuthor[]
-            }
+            data={info.getValue().split(ACCESSOR_SEPARATOR) as PublicationAuthor[]}
           />
         ),
         enableSorting: false,
@@ -219,9 +204,7 @@ export default function PublicationTable({
       }),
       columnHelper.accessor("title", {
         cell: (info) => (
-          <a href={`/publications/${info.row.original.slug}`}>
-            {info.getValue()}
-          </a>
+          <Link href={`/publications/${info.row.original.slug}`}>{info.getValue()}</Link>
         ),
         header: "Title",
         id: "title",
@@ -250,9 +233,7 @@ export default function PublicationTable({
           cell: (info) => (
             <Tags
               column={info.column}
-              data={
-                info.getValue().split(ACCESSOR_SEPARATOR) as PublicationTag[]
-              }
+              data={info.getValue().split(ACCESSOR_SEPARATOR) as PublicationTag[]}
             />
           ),
           enableSorting: false,
@@ -314,16 +295,11 @@ export default function PublicationTable({
                     {...{
                       onClick: header.column.getToggleSortingHandler(),
                       style: {
-                        cursor: header.column.getCanSort()
-                          ? "pointer"
-                          : "default",
+                        cursor: header.column.getCanSort() ? "pointer" : "default",
                       },
                     }}
                   >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                     {{
                       asc: " 🔼",
                       desc: " 🔽",
@@ -338,9 +314,7 @@ export default function PublicationTable({
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
+                <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
               ))}
             </tr>
           ))}
@@ -349,8 +323,7 @@ export default function PublicationTable({
       {isFooterVisible && (
         <div>
           <span>
-            Showing {table.getRowModel().rows.length} of {data.length}{" "}
-            publications
+            Showing {table.getRowModel().rows.length} of {data.length} publications
           </span>
         </div>
       )}

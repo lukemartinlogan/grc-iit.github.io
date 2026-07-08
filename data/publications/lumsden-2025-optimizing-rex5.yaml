@@ -16,7 +16,10 @@ authors:
   - X.-H. Sun
   - M. Taufer
 date: September, 2025
-links: {}
+links:
+  bibtex: http://cs.iit.edu/~scs/assets/files/lumsden2025rabbit.bib
+  citation: http://cs.iit.edu/~scs/assets/files/lumsden2025rabbit.txt
+  pdf: http://cs.iit.edu/~scs/assets/files/lumsden2025rabbit.pdf
 month: 9
 slug: lumsden-2025-optimizing-rex5
 tags:
